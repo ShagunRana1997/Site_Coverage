@@ -27,16 +27,23 @@ function requireAuth(req, res, next) {
   return res.status(401).send('Invalid credentials');
 }
 
-// Trust proxy when running behind a platform load balancer
 app.set('trust proxy', true);
 
-app.use(requireAuth); // Require Authentication
+// 🔐 apply auth to everything (static + API)
+app.use(requireAuth);
 
 // Serve static files from /public (frontend)
 app.use(express.static(path.join(__dirname, 'public'), { index: 'index.html', extensions: ['html'] }));
 
-// --- Healthcheck (for platform uptime monitoring) ---
+// --- Healthcheck ---
 app.get('/healthz', (req, res) => res.status(200).send('ok'));
+
+// ---- Protected API ----
+app.get('/api/points', async (req, res) => {
+  const data = await loadCsvCached();
+  res.set('Cache-Control', 'no-store');
+  res.json(data);
+});
 
 // ---- CSV Loader with simple caching ----
 const CSV_LOCAL_PATH = path.join(__dirname, 'data', 'Sites.csv');
@@ -161,4 +168,5 @@ app.get('/api/points', requireAuth, async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+
 });
