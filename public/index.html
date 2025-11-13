@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auric AI || Sites</title>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin
+  ></script>
+
+  <!-- MarkerCluster -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #020617;
+      --border: #1f2937;
+      --accent: #38bdf8;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --card-shadow: 0 20px 45px rgba(15, 23, 42, 0.9);
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+      color: var(--text-main);
+    }
+
+    .page {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .page-header {
+      padding-top: 18px; /* a bit of gap from top border */
+      padding-bottom: 8px;
+      text-align: center;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #f9fafb;
+    }
+
+    .page-subtitle {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .page-main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 0 16px 16px;
+      box-sizing: border-box;
+    }
+
+    .map-card {
+      position: relative;
+      flex: 1;
+      max-width: 1200px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      background: var(--bg-alt);
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+      min-height: 420px;
+    }
+
+    /* Legend stays on top always */
+    .legend {
+      position: fixed;
+      top: 96px; /* below the title */
+      right: 24px;
+      z-index: 2000;
+      background: rgba(15, 23, 42, 0.95);
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      font: 12px/1.35 system-ui, Arial;
+      color: #e5e7eb;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+    }
+
+    .legend b {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .legend-item {
+      display: grid;
+      grid-template-columns: 14px 1fr auto;
+      gap: 6px;
+      align-items: center;
+      margin: 3px 0;
+    }
+
+    .page-footer {
+      text-align: center;
+      width: 100%;
+      padding: 10px 0;
+      color: #e5e7eb;        /* optional (dark theme match) */
+      font-size: 14px;        /* optional */
+    }
+    
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 2px solid #0b1120;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.8);
+    }
+
+    .user-marker {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid #f9fafb;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.7);
+    }
+
+    /* Slight restyle for Leaflet controls to match the theme */
+    .leaflet-control-layers {
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+    }
+
+    .leaflet-control-layers-expanded {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      color: #e5e7eb;
+    }
+
+    .leaflet-control-layers-list {
+      font-size: 12px;
+    }
+
+    .leaflet-control-layers-base label {
+      color: #e5e7eb;
+    }
+
+    .leaflet-control-attribution {
+      background: rgba(15, 23, 42, 0.9);
+      color: #9ca3af;
+    }
+
+    .leaflet-container a {
+      color: #7dd3fc;
+    }
+
+    @media (max-width: 768px) {
+      .legend {
+        right: 12px;
+        top: 110px;
+      }
+      .map-card {
+        border-radius: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <h1 class="page-title">Sites Captured</h1>
+      <p class="page-subtitle">Refer legend to check analyst wise distribution</p>
+    </header>
+
+    <main class="page-main">
+      <div class="map-card">
+        <div id="map"></div>
+      </div>
+    </main>
+
+    <div class="legend" id="legend"><b>Legend</b></div>
+    <footer class="page-footer">Auric AI Labs || Only for internal use</footer>
+
+  </div>
+
+  <script>
+    // --- Map init ---
+    const map = L.map('map', {
+      preferCanvas: true,
+      maxBoundsViscosity: 1.0  // "sticky" edges when you hit the bounds
+    }).setView([20, 0], 2);
+
+
+    // Base layers: Map & Satellite
+    const streetLayer = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+      noWrap: true
+      }
+    );
+
+
+    const satelliteLayer = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxZoom: 19,
+        attribution:
+          'Imagery &copy; <a href="https://www.esri.com/">Esri</a>, Tiles &copy; Esri',
+          noWrap: true
+      }
+    );
+
+    // Start with street map
+    streetLayer.addTo(map);
+
+    // Layer control to toggle Map / Satellite
+    const baseMaps = {
+      'Map View': streetLayer,
+      'Satellite View': satelliteLayer
+    };
+    L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
+
+    // Marker cluster group
+    const clusterGroup = L.markerClusterGroup({
+      chunkedLoading: true,
+      disableClusteringAtZoom: 15,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false
+    }).addTo(map);
+
+    // Colouring logic
+    const colorPalette = [
+      '#7c9cff',
+      '#ff7ca8',
+      '#ffd166',
+      '#06d6a0',
+      '#a78bfa',
+      '#60a5fa',
+      '#f472b6',
+      '#34d399',
+      '#f59e0b',
+      '#f87171',
+      '#22d3ee',
+      '#c084fc',
+      '#84cc16'
+    ];
+    const userColor = new Map();
+    const userCounts = new Map();
+    let nextColorIdx = 0;
+
+    function getColorFor(user) {
+      if (!userColor.has(user)) {
+        const color = colorPalette[nextColorIdx % colorPalette.length];
+        userColor.set(user, color);
+        nextColorIdx++;
+      }
+      return userColor.get(user);
+    }
+
+    function makeIcon(color) {
+      const html = `<div class="user-marker" style="background:${color}"></div>`;
+      return L.divIcon({
+        className: '',
+        html,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+    }
+
+    function renderLegend() {
+      const el = document.getElementById('legend');
+      el.innerHTML = '<b>Legend</b>';
+      for (const [user, color] of userColor.entries()) {
+        const row = document.createElement('div');
+        row.className = 'legend-item';
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.background = color;
+        const name = document.createElement('div');
+        name.textContent = user;
+        const count = document.createElement('div');
+        count.textContent = userCounts.get(user) || 0;
+        row.append(dot, name, count);
+        el.append(row);
+      }
+    }
+
+    function escapeHtml(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // --- Load points from backend ---
+    async function loadPoints() {
+      const res = await fetch('/api/points');
+      if (!res.ok) {
+        alert('Failed to load /api/points');
+        return;
+      }
+      const features = await res.json();
+
+      const markers = [];
+      for (const f of features) {
+        const color = getColorFor(f.label);
+        userCounts.set(f.label, (userCounts.get(f.label) || 0) + 1);
+
+        const m = L.marker([f.lat, f.lon], {
+          icon: makeIcon(color),
+          title: f.label
+        });
+
+        m.bindPopup(
+          `<b>${escapeHtml(f.label)}</b><br/>${Number(f.lat).toFixed(
+            6
+          )}, ${Number(f.lon).toFixed(6)}`
+        );
+        markers.push(m);
+      }
+
+      markers.forEach((m) => clusterGroup.addLayer(m));
+
+      if (markers.length) {
+        const group = L.featureGroup(markers);
+        const bounds = group.getBounds().pad(0.25);   // a bit of margin around your sites
+
+        map.fitBounds(bounds, { maxZoom: 12 });
+        map.setMaxBounds(bounds.pad(0.2));            // lock panning to slightly larger area
+      }
+
+
+      renderLegend();
+    }
+
+    loadPoints();
+  </script>
+</body>
+</html>
