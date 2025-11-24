@@ -125,7 +125,7 @@ function normalizeRows(rows) {
   for (const row of rows) {
     const latKey  = findKey(row, ['lat', 'Latitude', 'y']);
     const lonKey  = findKey(row, ['lon', 'lng', 'Longitude', 'x']);
-    const nameKey = findKey(row, ['user', 'username', 'name', 'label', 'Analyst']);
+    const nameKey = findKey(row, ['user', 'username', 'name', 'label', 'Analyst', 'Places']);
 
     if (!latKey || !lonKey || !nameKey) { dropped++; continue; }
 
@@ -170,3 +170,4 @@ app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 
 });
+
