@@ -1,33 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Auric AI || Sites</title>
+  <title>Private Sites Web GIS</title>
 
   <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin
-  ></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin></script>
 
   <!-- MarkerCluster -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- Leaflet.heat (heatmap plugin) -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <style>
     :root {
@@ -57,7 +48,8 @@
     }
 
     .page-header {
-      padding-top: 18px; /* a bit of gap from top border */
+      padding-top: 18px;
+      /* gap from top border */
       padding-bottom: 8px;
       text-align: center;
     }
@@ -105,7 +97,8 @@
     /* Legend stays on top always */
     .legend {
       position: fixed;
-      top: 96px; /* below the title */
+      top: 96px;
+      /* below the title */
       right: 24px;
       z-index: 2000;
       background: rgba(15, 23, 42, 0.95);
@@ -135,14 +128,6 @@
       margin: 3px 0;
     }
 
-    .page-footer {
-      text-align: center;
-      width: 100%;
-      padding: 10px 0;
-      color: #e5e7eb;        /* optional (dark theme match) */
-      font-size: 14px;        /* optional */
-    }
-    
     .dot {
       width: 12px;
       height: 12px;
@@ -159,7 +144,7 @@
       box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.7);
     }
 
-    /* Slight restyle for Leaflet controls to match the theme */
+    /* Leaflet controls styling */
     .leaflet-control-layers {
       border-radius: 10px;
       overflow: hidden;
@@ -177,7 +162,8 @@
       font-size: 12px;
     }
 
-    .leaflet-control-layers-base label {
+    .leaflet-control-layers-base label,
+    .leaflet-control-layers-overlays label {
       color: #e5e7eb;
     }
 
@@ -195,17 +181,30 @@
         right: 12px;
         top: 110px;
       }
+
       .map-card {
         border-radius: 12px;
       }
     }
+
+    /* Optional centered footer */
+    .footer {
+      text-align: center;
+      width: 100%;
+      padding: 8px 0 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
   </style>
 </head>
+
 <body>
   <div class="page">
     <header class="page-header">
-      <h1 class="page-title">Sites Captured</h1>
-      <p class="page-subtitle">Refer legend to check analyst wise distribution</p>
+      <h1 class="page-title">Locations Covered</h1>
+      <p class="page-subtitle">
+        Zoom in to view the location points. Click on points to view the details.
+      </p>
     </header>
 
     <main class="page-main">
@@ -214,29 +213,29 @@
       </div>
     </main>
 
-    <div class="legend" id="legend"><b>Legend</b></div>
-    <footer class="page-footer">Auric AI Labs || Only for internal use</footer>
+    <!-- <div class="legend" id="legend"><b>Analysts</b></div> -->
 
+    <footer class="footer">
+      © 2025 Auric Ai Labs — Internal Use Only
+    </footer>
   </div>
 
   <script>
-    // --- Map init ---
+    // --- Map init with bounded panning ---
     const map = L.map('map', {
       preferCanvas: true,
-      maxBoundsViscosity: 1.0  // "sticky" edges when you hit the bounds
+      maxBoundsViscosity: 1.0
     }).setView([20, 0], 2);
-
 
     // Base layers: Map & Satellite
     const streetLayer = L.tileLayer(
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
         maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors',
-      noWrap: true
+        attribution: '&copy; OpenStreetMap contributors',
+        noWrap: true
       }
     );
-
 
     const satelliteLayer = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -244,27 +243,35 @@
         maxZoom: 19,
         attribution:
           'Imagery &copy; <a href="https://www.esri.com/">Esri</a>, Tiles &copy; Esri',
-          noWrap: true
+        noWrap: true
+      }
+    );
+
+    const darklayer = L.tileLayer(
+      'http://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+        attribution:
+          'Map &copy; <a href="https://www.carto.com/">Carto</a>, Tiles &copy; Carto',
+        noWrap: true
       }
     );
 
     // Start with street map
     streetLayer.addTo(map);
 
-    // Layer control to toggle Map / Satellite
+    // Heatmap & points will be added later
+    let heatLayer = null;
+    const pointsLayer = L.layerGroup().addTo(map);
+
+    // Layer control to toggle Map/Satellite + Heatmap/Points
     const baseMaps = {
       'Map View': streetLayer,
-      'Satellite View': satelliteLayer
+      'Satellite View': satelliteLayer,
+      'Dark View': darklayer
     };
-    L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
-
-    // Marker cluster group
-    const clusterGroup = L.markerClusterGroup({
-      chunkedLoading: true,
-      disableClusteringAtZoom: 15,
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: false
-    }).addTo(map);
+    const overlayMaps = {}; // we fill after heat/points are created
+    const layerControl = L.control.layers(baseMaps, overlayMaps, { position: 'topleft' }).addTo(map);
 
     // Colouring logic
     const colorPalette = [
@@ -305,23 +312,23 @@
       });
     }
 
-    function renderLegend() {
-      const el = document.getElementById('legend');
-      el.innerHTML = '<b>Legend</b>';
-      for (const [user, color] of userColor.entries()) {
-        const row = document.createElement('div');
-        row.className = 'legend-item';
-        const dot = document.createElement('div');
-        dot.className = 'dot';
-        dot.style.background = color;
-        const name = document.createElement('div');
-        name.textContent = user;
-        const count = document.createElement('div');
-        count.textContent = userCounts.get(user) || 0;
-        row.append(dot, name, count);
-        el.append(row);
-      }
-    }
+    // function renderLegend() {
+    //   const el = document.getElementById('legend');
+    //   el.innerHTML = '<b>Analysts</b>';
+    //   for (const [user, color] of userColor.entries()) {
+    //     const row = document.createElement('div');
+    //     row.className = 'legend-item';
+    //     const dot = document.createElement('div');
+    //     dot.className = 'dot';
+    //     dot.style.background = color;
+    //     const name = document.createElement('div');
+    //     name.textContent = user;
+    //     const count = document.createElement('div');
+    //     count.textContent = userCounts.get(user) || 0;
+    //     row.append(dot, name, count);
+    //     el.append(row);
+    //   }
+    // }
 
     function escapeHtml(s) {
       return s
@@ -330,7 +337,7 @@
         .replace(/>/g, '&gt;');
     }
 
-    // --- Load points from backend ---
+    // --- Load points from backend & build heatmap + points ---
     async function loadPoints() {
       const res = await fetch('/api/points');
       if (!res.ok) {
@@ -340,33 +347,82 @@
       const features = await res.json();
 
       const markers = [];
+      const heatPoints = [];
+
       for (const f of features) {
         const color = getColorFor(f.label);
         userCounts.set(f.label, (userCounts.get(f.label) || 0) + 1);
 
+        // Points layer (for popups and legend)
         const m = L.marker([f.lat, f.lon], {
           icon: makeIcon(color),
           title: f.label
         });
-
         m.bindPopup(
           `<b>${escapeHtml(f.label)}</b><br/>${Number(f.lat).toFixed(
             6
           )}, ${Number(f.lon).toFixed(6)}`
         );
         markers.push(m);
+
+        // Heatmap point: [lat, lon, intensity]
+        // You can tune intensity (third value) between 0 and 1
+        heatPoints.push([f.lat, f.lon, 0.6]);
       }
 
-      markers.forEach((m) => clusterGroup.addLayer(m));
+      markers.forEach((m) => pointsLayer.addLayer(m));
 
+      // Create heat layer - Default
+      // heatLayer = L.heatLayer(heatPoints, {
+      //   radius: 25,     // in pixels
+      //   blur: 15,
+      //   maxZoom: 17,
+      //   minOpacity: 0.3
+      // }).addTo(map);
+
+      // Create heat layer - Custom
+      heatLayer = L.heatLayer(heatPoints, {
+        radius: 15,
+        blur: 15,
+        maxZoom: 17,
+        minOpacity: 0.5,
+        gradient: {
+          0.0: "#00faff",
+          0.3: "#00ff1e",
+          0.5: "#f2ff00",
+          0.8: "#ff9900",
+          1.0: "#ff0000"
+        }
+      }).addTo(map);
+
+      // --- Show points only after a certain zoom level ---
+      const POINTS_VISIBLE_ZOOM = 7;   // Change this threshold if needed
+
+      // Initial state: hide points if zoomed out
+      if (map.getZoom() < POINTS_VISIBLE_ZOOM) {
+        map.removeLayer(pointsLayer);
+      }
+
+      // Toggle visibility on zoom
+      map.on("zoomend", () => {
+        if (map.getZoom() >= POINTS_VISIBLE_ZOOM) {
+          if (!map.hasLayer(pointsLayer)) map.addLayer(pointsLayer);
+        } else {
+          if (map.hasLayer(pointsLayer)) map.removeLayer(pointsLayer);
+        }
+      });
+
+      // Fit bounds and lock map to your data area
       if (markers.length) {
         const group = L.featureGroup(markers);
-        const bounds = group.getBounds().pad(0.25);   // a bit of margin around your sites
-
+        const bounds = group.getBounds().pad(0.25);
         map.fitBounds(bounds, { maxZoom: 12 });
-        map.setMaxBounds(bounds.pad(0.2));            // lock panning to slightly larger area
+        map.setMaxBounds(bounds.pad(0.2));
       }
 
+      // Update layer control overlays
+      layerControl.addOverlay(heatLayer, 'Heatmap');
+      layerControl.addOverlay(pointsLayer, 'Points');
 
       renderLegend();
     }
@@ -374,4 +430,5 @@
     loadPoints();
   </script>
 </body>
+
 </html>
